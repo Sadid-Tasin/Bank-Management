@@ -1,0 +1,3 @@
+package com.bank.bankmanagement.common.fraud;
+import java.math.BigDecimal;import java.time.LocalDateTime;
+public record FraudAlertResponse(Long id,String transactionReference,String accountNumber,BigDecimal amount,String severity,String reason,String status,LocalDateTime createdAt,LocalDateTime resolvedAt,String resolvedByEmail){public static FraudAlertResponse from(FraudAlert a){return new FraudAlertResponse(a.getId(),a.getTransaction().getReference(),a.getAccount().getAccountNumber(),a.getTransaction().getAmount(),a.getSeverity(),a.getReason(),a.getStatus(),a.getCreatedAt(),a.getResolvedAt(),a.getResolvedByEmail());}}
