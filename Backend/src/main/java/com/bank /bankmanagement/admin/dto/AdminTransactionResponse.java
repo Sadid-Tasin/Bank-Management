@@ -1,1 +1,3 @@
-
+package com.bank.bankmanagement.admin.dto;
+import com.bank.bankmanagement.transaction.entity.BankTransaction;import com.bank.bankmanagement.transaction.enums.TransactionType;import java.math.BigDecimal;import java.time.LocalDateTime;
+public record AdminTransactionResponse(Long id,String reference,TransactionType type,String sourceAccountNumber,String destinationAccountNumber,BigDecimal amount,String description,LocalDateTime createdAt){public static AdminTransactionResponse from(BankTransaction t){return new AdminTransactionResponse(t.getId(),t.getReference(),t.getType(),t.getSourceAccount()==null?null:t.getSourceAccount().getAccountNumber(),t.getDestinationAccount()==null?null:t.getDestinationAccount().getAccountNumber(),t.getAmount(),t.getDescription(),t.getCreatedAt());}}
