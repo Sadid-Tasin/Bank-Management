@@ -1,0 +1,4 @@
+package com.bank.bankmanagement.common.notification;
+import org.springframework.data.domain.*;import org.springframework.data.jpa.repository.JpaRepository;import java.util.Optional;import org.springframework.data.jpa.repository.Modifying;import org.springframework.data.jpa.repository.Query;import org.springframework.data.repository.query.Param;import org.springframework.transaction.annotation.Transactional;
+public interface NotificationRepository extends JpaRepository<BankNotification,Long>{Page<BankNotification> findByUser_IdOrderByCreatedAtDesc(Long userId,Pageable pageable);Optional<BankNotification> findByIdAndUser_Id(Long id,Long userId);
+ @Modifying @Transactional @Query("DELETE FROM BankNotification n WHERE n.user.id = :userId") void deleteAllByUserId(@Param("userId") Long userId);}
