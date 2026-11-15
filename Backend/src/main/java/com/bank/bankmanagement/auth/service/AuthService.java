@@ -128,6 +128,7 @@ public class AuthService {
             ProfilePhotoRequest request
     ) {
         BankUser user = findUser(email);
+        requirePhotoPermission(user);
         try {
             user.updateProfilePhoto(request.photo());
         } catch (IllegalArgumentException ex) {
@@ -139,8 +140,17 @@ public class AuthService {
     @Transactional
     public ProfileResponse removeProfilePhoto(String email) {
         BankUser user = findUser(email);
+        requirePhotoPermission(user);
         user.removeProfilePhoto();
         return toProfileResponse(user);
+    }
+
+    // Customers cannot add or change a profile photo; staff and admins can.
+    private void requirePhotoPermission(BankUser user) {
+        if (user.getRole() == UserRole.CUSTOMER) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Customers cannot add or change a profile photo");
+        }
     }
 
     private BankUser findUser(String email) {
