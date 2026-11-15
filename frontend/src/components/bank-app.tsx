@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,7 +8,7 @@ import {
   Activity, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ArrowRight, Bell, BriefcaseBusiness,
   Check, CheckCircle2, ChevronDown, ChevronRight, CreditCard, Download, FileClock, FileText,
   HandCoins, LayoutDashboard, LogOut, Menu, MoreHorizontal, Plus, RefreshCw, Search, Settings,
-  ShieldAlert, ShieldCheck, UserRound, Users, Wallet, X, Banknote, LockKeyhole, Sparkles, BadgeCheck,
+  ShieldAlert, ShieldCheck, UserRound, Users, Wallet, X, Banknote, LockKeyhole, Sparkles, BadgeCheck, Mail, Phone, MapPin, Fingerprint,
 } from "lucide-react";
 import ActivityChart, { type ActivityPoint } from "@/components/activity-chart";
 import { apiRequest, clearSession, getProfile, login, registerCustomer, readSession, saveSession, type SessionData, ApiError } from "@/lib/api";
@@ -224,30 +225,65 @@ function LoginScreen({ onLogin, initialMode, onBack }: {
     } catch (e) { setError(getError(e)); }
     finally { setBusy(false); }
   };
+  // visual-only password strength hint (registration)
+  const strength = (() => {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password) || password.length >= 12) score++;
+    return score;
+  })();
+  const strengthLabel = ["Too short", "Weak", "Okay", "Good", "Strong"][strength];
   return <main className="auth-screen">
     <div className="auth-background-glow auth-background-glow-one" />
     <div className="auth-background-glow auth-background-glow-two" />
     <header className="auth-topbar"><button className="auth-back-button" onClick={onBack}><ArrowRight size={15} className="auth-back-icon" /> Back to home</button><Brand /></header>
     <section className="auth-layout">
       <div className="auth-story">
+        <span className="auth-spark auth-spark-1" aria-hidden="true" />
+        <span className="auth-spark auth-spark-2" aria-hidden="true" />
+        <span className="auth-spark auth-spark-3" aria-hidden="true" />
         <div className="auth-story-kicker"><span /> YOUR MONEY. YOUR MOMENTUM.</div>
         <h1>{mode === "login" ? <>Welcome back to<br /><em>better banking.</em></> : <>Start with a<br /><em>stronger account.</em></>}</h1>
         <p>{mode === "login" ? "Sign in to your secure workspace and pick up right where you left off." : "Create your customer profile to begin your banking journey with Confused Bank."}</p>
+
+        <div className="auth-live-strip" aria-hidden="true">
+          <span className="auth-live-shield"><ShieldCheck size={19} /></span>
+          <svg className="auth-live-chart" viewBox="0 0 132 34" fill="none">
+            <defs>
+              <linearGradient id="authAreaFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#34b38a" stopOpacity=".32" />
+                <stop offset="100%" stopColor="#34b38a" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path className="area" d="M2 28 C 14 26, 20 15, 32 17 S 52 9, 64 13 S 86 21, 98 8 S 118 11, 130 5 L130 34 L2 34 Z" />
+            <path className="line" pathLength={1} d="M2 28 C 14 26, 20 15, 32 17 S 52 9, 64 13 S 86 21, 98 8 S 118 11, 130 5" />
+            <circle className="auth-live-dot" cx="130" cy="5" r="3.2" />
+          </svg>
+          <span className="auth-live-bars"><i /><i /><i /><i /></span>
+        </div>
+
         <div className="auth-benefits"><span><ShieldCheck size={17} /> Secure token-based access</span><span><Activity size={17} /> Clear account activity</span><span><Sparkles size={17} /> A simpler banking experience</span></div>
         <div className="auth-story-note"><span className="auth-note-mark"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></span><span><strong>Banking, made more human.</strong><small>Thoughtful tools for everyday financial tasks.</small></span></div>
       </div>
 
       <div className="login-card auth-card">
-        <div className="auth-card-header"><div><div className="login-eyebrow">{mode === "login" ? "SECURE ACCESS" : "CUSTOMER REGISTRATION"}</div><h2>{mode === "login" ? "Sign in to your account" : "Create your account"}</h2><p>{mode === "login" ? "Enter your details to access your workspace." : "A few details to set up your customer profile."}</p></div><div className="login-symbol"><LockKeyhole size={22} /></div></div>
+        <span className="auth-card-glow auth-card-glow-a" aria-hidden="true" />
+        <span className="auth-card-glow auth-card-glow-b" aria-hidden="true" />
+        <div className="auth-card-header"><div key={mode} className="auth-card-title"><div className="login-eyebrow">{mode === "login" ? "SECURE ACCESS" : "CUSTOMER REGISTRATION"}</div><h2>{mode === "login" ? "Sign in to your account" : "Create your account"}</h2><p>{mode === "login" ? "Enter your details to access your workspace." : "A few details to set up your customer profile."}</p></div><div className="login-symbol"><LockKeyhole size={22} /></div></div>
         <div className="auth-mode-switch" role="group" aria-label="Authentication mode"><button type="button" className={mode === "login" ? "auth-mode-active" : ""} onClick={() => { setMode("login"); setError(""); setSuccess(""); }}>Sign in</button><button type="button" className={mode === "register" ? "auth-mode-active" : ""} onClick={() => { setMode("register"); setError(""); setSuccess(""); }}>Register</button></div>
-        <form onSubmit={submit} className="login-form">
-          {mode === "register" && <Field label="Full name"><input value={fullName} onChange={(e) => setFullName(e.target.value)} required maxLength={100} autoComplete="name" placeholder="Your full name" /></Field>}
-          <Field label="Email address"><input type="email" autoComplete="username" required placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={150} /></Field>
-          <Field label="Password"><div className="password-input"><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "register" ? 8 : undefined} maxLength={72} placeholder={mode === "login" ? "Enter your password" : "Create a password (8+ characters)"} value={password} onChange={(e) => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? "Hide" : "Show"}</button></div></Field>
-          {mode === "register" && <div className="register-extra-fields"><Field label="Phone number · optional"><input value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} autoComplete="tel" placeholder="Your phone number" /></Field><Field label="National ID · optional"><input value={nationalId} onChange={(e) => setNationalId(e.target.value)} maxLength={30} placeholder="National ID number" /></Field><Field label="Address · optional"><input value={address} onChange={(e) => setAddress(e.target.value)} maxLength={255} autoComplete="street-address" placeholder="Current address" /></Field></div>}
+        <form key={mode} onSubmit={submit} className="login-form">
+          {mode === "register" && <Field label="Full name"><div className="input-shell"><UserRound size={16} className="input-icon" /><input value={fullName} onChange={(e) => setFullName(e.target.value)} required maxLength={100} autoComplete="name" placeholder="Your full name" /></div></Field>}
+          <Field label="Email address"><div className="input-shell"><Mail size={16} className="input-icon" /><input type="email" autoComplete="username" required placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={150} /></div></Field>
+          <Field label="Password">
+            <div className="password-input input-shell"><LockKeyhole size={16} className="input-icon" /><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "register" ? 8 : undefined} maxLength={72} placeholder={mode === "login" ? "Enter your password" : "Create a password (8+ characters)"} value={password} onChange={(e) => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? "Hide" : "Show"}</button></div>
+            {mode === "register" && password && <div className="pw-meter" data-level={strength} aria-live="polite"><span /><span /><span /><span /><em>{strengthLabel}</em></div>}
+          </Field>
+          {mode === "register" && <div className="register-extra-fields"><Field label="Phone number · optional"><div className="input-shell"><Phone size={16} className="input-icon" /><input value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} autoComplete="tel" placeholder="Your phone number" /></div></Field><Field label="National ID · optional"><div className="input-shell"><Fingerprint size={16} className="input-icon" /><input value={nationalId} onChange={(e) => setNationalId(e.target.value)} maxLength={30} placeholder="National ID number" /></div></Field><Field label="Address · optional"><div className="input-shell"><MapPin size={16} className="input-icon" /><input value={address} onChange={(e) => setAddress(e.target.value)} maxLength={255} autoComplete="street-address" placeholder="Current address" /></div></Field></div>}
           {error && <div className="form-error" role="alert"><ShieldAlert size={16} />{error}</div>}
           {success && <div className="form-success" role="status"><CheckCircle2 size={16} />{success}</div>}
-          <button className="button button-primary login-submit" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in securely" : "Create customer account"}<ArrowRight size={17} /></button>
+          <button className="button button-primary login-submit" disabled={busy}><span className="login-submit-label">{busy && <span className="btn-spinner" aria-hidden="true" />}{busy ? "Please wait…" : mode === "login" ? "Sign in securely" : "Create customer account"}</span><ArrowRight size={17} /></button>
         </form>
         <div className="login-foot"><ShieldCheck size={15} /> Protected with secure token-based authentication</div>
         <p className="auth-card-note">{mode === "login" ? "New to Confused Bank? Use Register to create a customer account." : "Already have an account? Choose Sign in above."}</p>
@@ -732,3 +768,4 @@ function LoanRepaymentAction({ loan, accounts, token, onDone, onError }: { loan:
   if (loan.status !== "DISBURSED" || !loan.outstandingAmount || loan.outstandingAmount <= 0) return <span className="muted-text">—</span>;
   return <div className="repayment-action">{!open ? <button className="button button-mini button-secondary" onClick={() => setOpen(true)}>Repay</button> : <form onSubmit={async (e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); setBusy(true); try { await apiRequest<LoanRepayment>(`/api/v1/loans/${loan.id}/repayments`, token, { method: "POST", body: JSON.stringify({ accountNumber: fd.get("accountNumber"), amount: Number(fd.get("amount")) }) }); onDone(); setOpen(false); } catch (error) { onError(getError(error)); } finally { setBusy(false); } }}><select name="accountNumber" required>{accounts.filter((a) => a.status === "ACTIVE").map((a) => <option key={a.id} value={a.accountNumber}>{a.accountNumber}</option>)}</select><input name="amount" type="number" min="0.01" max={loan.outstandingAmount} step="0.01" required placeholder="Installment" defaultValue={loan.monthlyInstallment || loan.outstandingAmount} /><button className="button button-mini button-primary" disabled={busy}>{busy ? "…" : "Pay"}</button><button type="button" className="button button-mini button-secondary" onClick={() => setOpen(false)}>×</button></form>}</div>;
 }
+
