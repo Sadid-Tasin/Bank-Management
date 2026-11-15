@@ -5,6 +5,7 @@ public class AdminReportingController{
  private final ReportingService reports;private final AuditLogService audit;private final FraudAlertService fraud;private final InterestPostingService interest;
  public AdminReportingController(ReportingService r,AuditLogService a,FraudAlertService f,InterestPostingService i){reports=r;audit=a;fraud=f;interest=i;}
  @GetMapping("/reports/overview") public SystemOverviewResponse overview(){return reports.overview();}
+  @GetMapping("/reports/activity") public java.util.List<DailyActivityResponse> activity(@RequestParam(defaultValue="30") int days){return reports.dailyActivity(days);}
  @GetMapping("/reports/transactions") public Page<AdminTransactionResponse> transactions(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return reports.transactions(page,size);}
  @GetMapping("/audit-logs") public Page<AuditLog> audit(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return audit.latest(page,size);}
  @GetMapping("/fraud-alerts") public Page<FraudAlertResponse> alerts(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size){return fraud.open(page,size);}
