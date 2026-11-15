@@ -63,6 +63,9 @@ public class BankUser {
     @Column(length = 150)
     private String kycReviewedByEmail;
 
+    @Column(name = "profile_photo", columnDefinition = "text")
+    private String profilePhoto;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -145,6 +148,24 @@ public class BankUser {
         this.address = normalizeOptional(address);
     }
 
+    public void updateProfilePhoto(String photo) {
+        if (photo == null || photo.isBlank()) {
+            throw new IllegalArgumentException("Profile photo is required");
+        }
+        String value = photo.trim();
+        boolean allowedType = value.startsWith("data:image/jpeg;base64,")
+                || value.startsWith("data:image/png;base64,")
+                || value.startsWith("data:image/webp;base64,");
+        if (!allowedType) {
+            throw new IllegalArgumentException("Profile photo must be a JPEG, PNG or WebP image");
+        }
+        this.profilePhoto = value;
+    }
+
+    public void removeProfilePhoto() {
+        this.profilePhoto = null;
+    }
+
     public Long getId() {
         return id;
     }
@@ -199,5 +220,9 @@ public class BankUser {
 
     public String getKycReviewedByEmail() {
         return kycReviewedByEmail;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
     }
 }
