@@ -8,7 +8,7 @@ import {
   Activity, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ArrowRight, Bell, BriefcaseBusiness,
   Check, CheckCircle2, ChevronDown, ChevronRight, CreditCard, Download, FileClock, FileText,
   HandCoins, LayoutDashboard, LogOut, Menu, MoreHorizontal, Plus, RefreshCw, Search, Settings,
-  ShieldAlert, ShieldCheck, UserRound, Users, Wallet, X, Banknote, LockKeyhole, Sparkles, BadgeCheck, Mail, Phone, MapPin, Fingerprint,
+  ShieldAlert, ShieldCheck, UserRound, Users, Wallet, X, Banknote, LockKeyhole, Sparkles, BadgeCheck, Mail, Phone, MapPin, Fingerprint, Camera, Trash2,
 } from "lucide-react";
 import ActivityChart, { type ActivityPoint } from "@/components/activity-chart";
 import { apiRequest, clearSession, getProfile, login, registerCustomer, readSession, saveSession, type SessionData, ApiError } from "@/lib/api";
@@ -323,6 +323,50 @@ export default function BankApp() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // ---- profile photo (saved in the database through the Spring Boot API) ----
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const avatar = profile?.profilePhoto || null;
+  const handleAvatarFile = (file?: File) => {
+    if (!file || !session) return;
+    if (!file.type.startsWith("image/")) { setError("Please choose an image file (JPG, PNG or WebP)."); return; }
+    if (file.size > 8 * 1024 * 1024) { setError("This photo is too large. Please choose an image under 8 MB."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = async () => {
+        const size = 256;
+        const canvas = document.createElement("canvas");
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const side = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        const photo = canvas.toDataURL("image/jpeg", 0.88);
+        setPhotoBusy(true); setError("");
+        try {
+          const updated = await apiRequest<Profile>("/api/v1/auth/me/photo", session.token, { method: "PUT", body: JSON.stringify({ photo }) });
+          setProfile(updated); setNotice("Profile photo updated.");
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 401) signOut(); else setError(getError(e));
+        } finally { setPhotoBusy(false); }
+      };
+      img.onerror = () => setError("This image could not be read. Please try another photo.");
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+  const removeAvatar = async () => {
+    if (!session) return;
+    setPhotoBusy(true); setError("");
+    try {
+      const updated = await apiRequest<Profile>("/api/v1/auth/me/photo", session.token, { method: "DELETE" });
+      setProfile(updated); setNotice("Profile photo removed.");
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) signOut(); else setError(getError(e));
+    } finally { setPhotoBusy(false); }
+  };
   const [modal, setModal] = useState<"staff" | "account" | null>(null);
 
   const role = profile?.role;
@@ -702,7 +746,21 @@ export default function BankApp() {
 
   const renderProfile = () => <>
     <ModuleHeader title="My profile" subtitle="View and update the personal contact details connected to your banking identity." />
-    <div className="profile-layout"><Panel title="Account identity" subtitle="Your identity and access role"><div className="profile-summary"><span className="profile-avatar">{initials(profile.fullName)}</span><div><strong>{profile.fullName}</strong><small>{profile.email}</small><StatusPill value={profile.role} /></div></div><div className="profile-info-row"><span>Customer / Staff ID</span><strong>#{profile.userId}</strong></div><div className="profile-info-row"><span>Access role</span><strong>{rolesLabel[profile.role]}</strong></div><div className="profile-info-row"><span>KYC status</span><StatusPill value={profile.kycStatus} /></div></Panel>
+    <div className="profile-layout"><Panel title="Account identity" subtitle="Your identity and access role"><div className="profile-summary">
+        <div className="avatar-uploader">
+          <button type="button" className="avatar-uploader-btn" disabled={photoBusy} onClick={() => avatarInputRef.current?.click()} aria-label={avatar ? "Change profile photo" : "Upload profile photo"}>
+            {avatar ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={avatar} alt="Your profile photo" /> : <span>{initials(profile.fullName)}</span>}
+            <i className="avatar-uploader-overlay"><Camera size={20} /></i>
+          </button>
+          <input ref={avatarInputRef} type="file" accept="image/*" hidden onChange={(e) => { handleAvatarFile(e.target.files?.[0]); e.target.value = ""; }} />
+        </div>
+        <div><strong>{profile.fullName}</strong><small>{profile.email}</small><StatusPill value={profile.role} />
+          <div className="avatar-actions">
+            <button type="button" className="button button-small button-secondary" disabled={photoBusy} onClick={() => avatarInputRef.current?.click()}><Camera size={14} /> {photoBusy ? "Saving…" : avatar ? "Change photo" : "Upload photo"}</button>
+            {avatar && <button type="button" className="button button-small button-secondary avatar-remove" disabled={photoBusy} onClick={removeAvatar}><Trash2 size={14} /> Remove</button>}
+          </div>
+        </div>
+      </div><div className="profile-info-row"><span>Customer / Staff ID</span><strong>#{profile.userId}</strong></div><div className="profile-info-row"><span>Access role</span><strong>{rolesLabel[profile.role]}</strong></div><div className="profile-info-row"><span>KYC status</span><StatusPill value={profile.kycStatus} /></div></Panel>
       <Panel title="Update contact details" subtitle="The backend validates full name, phone and address lengths"><form className="form-grid" onSubmit={async (e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); const ok = await doAction<Profile>("/api/v1/auth/me", "PUT", { fullName: fd.get("fullName"), phone: fd.get("phone"), address: fd.get("address") }, "Profile updated successfully."); if (ok) { const refreshed = await getProfile(session!.token); setProfile(refreshed); } }}><Field label="Full name"><input name="fullName" required maxLength={100} defaultValue={profile.fullName} /></Field><Field label="Email address"><input value={profile.email} disabled /></Field><Field label="Phone"><input name="phone" maxLength={20} defaultValue={profile.phone || ""} /></Field><div className="form-span"><Field label="Address"><textarea name="address" maxLength={255} rows={3} defaultValue={profile.address || ""} /></Field></div><div className="form-span form-actions"><button className="button button-primary">Save profile</button></div></form></Panel></div>
   </>;
 
@@ -732,7 +790,7 @@ export default function BankApp() {
       <div className="nav-section-label">WORKSPACE</div><nav className="main-nav" aria-label="Main navigation">{navItems.map(({ label, icon: Icon }) => <button key={label} className={`nav-link ${activeView === label ? "nav-link-active" : ""}`} onClick={() => selectView(label)}><Icon size={18} strokeWidth={1.9} /><span>{label}</span>{label === "Notifications" && unreadCount > 0 && <span className="nav-count">{unreadCount}</span>}</button>)}</nav>
       <div className="sidebar-bottom"><div className="upgrade-card"><div className="upgrade-icon"><ShieldCheck size={17} /></div><strong>Secure workspace</strong><p>Your session uses temporary browser session storage and bearer-token API access.</p><span className="secure-sidebar-label"><i /> SESSION ACTIVE</span></div><div className="sidebar-user"><div className="avatar avatar-admin">{initials(profile.fullName)}</div><div className="user-copy"><strong>{profile.fullName}</strong><span>{rolesLabel[profile.role]}</span></div></div></div>
     </aside>
-    <section className="main-area"><header className="topbar"><div className="topbar-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button><div className="breadcrumb">Workspace <ChevronRight size={14} /> <strong>{activeView}</strong></div></div><div className="topbar-actions"><label className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search this view…" aria-label="Search current view" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button className="icon-button notification-button" aria-label="Notifications" onClick={() => { setShowNotifications((v) => !v); if (activeView !== "Notifications") selectView("Notifications"); }}><Bell size={19} />{unreadCount > 0 && <i />}</button>{showNotifications && <div className="notification-popover"><strong>{unreadCount} unread notifications</strong><p>Open the Notifications section to review updates.</p><button className="inline-link" onClick={() => { setShowNotifications(false); selectView("Notifications"); }}>View notifications</button></div>}</div><div className="topbar-divider" /><div className="profile-menu-wrap" ref={profileMenuRef}><button type="button" className="profile-button" aria-haspopup="menu" aria-expanded={showProfileMenu} onClick={() => setShowProfileMenu((open) => !open)}><div className="avatar avatar-small">{initials(profile.fullName)}</div><span><strong>{profile.fullName}</strong><small>{rolesLabel[profile.role]}</small></span><ChevronDown size={15} className={showProfileMenu ? "profile-chevron profile-chevron-open" : "profile-chevron"} /></button>{showProfileMenu && <div className="profile-dropdown" role="menu" aria-label="Account menu"><button type="button" role="menuitem" onClick={() => { setShowProfileMenu(false); selectView("My profile"); }}><UserRound size={16} /><span>Profile</span></button><div className="profile-dropdown-divider" /><button type="button" role="menuitem" className="profile-dropdown-signout" onClick={signOut}><LogOut size={16} /><span>Sign out</span></button></div>}</div></div></header>
+    <section className="main-area"><header className="topbar"><div className="topbar-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button><div className="breadcrumb">Workspace <ChevronRight size={14} /> <strong>{activeView}</strong></div></div><div className="topbar-actions"><label className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search this view…" aria-label="Search current view" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button className="icon-button notification-button" aria-label="Notifications" onClick={() => { setShowNotifications((v) => !v); if (activeView !== "Notifications") selectView("Notifications"); }}><Bell size={19} />{unreadCount > 0 && <i />}</button>{showNotifications && <div className="notification-popover"><strong>{unreadCount} unread notifications</strong><p>Open the Notifications section to review updates.</p><button className="inline-link" onClick={() => { setShowNotifications(false); selectView("Notifications"); }}>View notifications</button></div>}</div><div className="topbar-divider" /><div className="profile-menu-wrap" ref={profileMenuRef}><button type="button" className="profile-button" aria-haspopup="menu" aria-expanded={showProfileMenu} onClick={() => setShowProfileMenu((open) => !open)}><div className="avatar avatar-small">{avatar ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={avatar} alt="" /> : initials(profile.fullName)}</div><span><strong>{profile.fullName}</strong><small>{rolesLabel[profile.role]}</small></span><ChevronDown size={15} className={showProfileMenu ? "profile-chevron profile-chevron-open" : "profile-chevron"} /></button>{showProfileMenu && <div className="profile-dropdown" role="menu" aria-label="Account menu"><button type="button" role="menuitem" onClick={() => { setShowProfileMenu(false); selectView("My profile"); }}><UserRound size={16} /><span>Profile</span></button><div className="profile-dropdown-divider" /><button type="button" role="menuitem" className="profile-dropdown-signout" onClick={signOut}><LogOut size={16} /><span>Sign out</span></button></div>}</div></div></header>
       <div className="content-wrap"><div className="content-status-row"><span><span className="live-dot" /> Connected to banking API</span><button className="refresh-link" onClick={() => setReloadKey((v) => v + 1)}><RefreshCw size={13} /> Refresh</button></div>
         {error && <div className="global-alert global-alert-error"><ShieldAlert size={16} /><span>{error}</span><button onClick={() => setError("")} aria-label="Dismiss error"><X size={15} /></button></div>}
         {notice && <div className="global-alert global-alert-success"><CheckCircle2 size={16} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notice"><X size={15} /></button></div>}
