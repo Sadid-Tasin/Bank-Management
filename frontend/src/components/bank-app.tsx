@@ -327,9 +327,11 @@ export default function BankApp() {
   // ---- profile photo (saved in the database through the Spring Boot API) ----
   const [photoBusy, setPhotoBusy] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const avatar = profile?.profilePhoto || null;
+  // Only staff / admin accounts can have a profile photo (customers cannot).
+  const canEditPhoto = !!profile && profile.role !== "CUSTOMER";
+  const avatar = canEditPhoto ? profile?.profilePhoto || null : null;
   const handleAvatarFile = (file?: File) => {
-    if (!file || !session) return;
+    if (!file || !session || !canEditPhoto) return;
     if (!file.type.startsWith("image/")) { setError("Please choose an image file (JPG, PNG or WebP)."); return; }
     if (file.size > 8 * 1024 * 1024) { setError("This photo is too large. Please choose an image under 8 MB."); return; }
     const reader = new FileReader();
@@ -358,7 +360,7 @@ export default function BankApp() {
     reader.readAsDataURL(file);
   };
   const removeAvatar = async () => {
-    if (!session) return;
+    if (!session || !canEditPhoto) return;
     setPhotoBusy(true); setError("");
     try {
       const updated = await apiRequest<Profile>("/api/v1/auth/me/photo", session.token, { method: "DELETE" });
@@ -747,6 +749,7 @@ export default function BankApp() {
   const renderProfile = () => <>
     <ModuleHeader title="My profile" subtitle="View and update the personal contact details connected to your banking identity." />
     <div className="profile-layout"><Panel title="Account identity" subtitle="Your identity and access role"><div className="profile-summary">
+        {canEditPhoto ? (
         <div className="avatar-uploader">
           <button type="button" className="avatar-uploader-btn" disabled={photoBusy} onClick={() => avatarInputRef.current?.click()} aria-label={avatar ? "Change profile photo" : "Upload profile photo"}>
             {avatar ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={avatar} alt="Your profile photo" /> : <span>{initials(profile.fullName)}</span>}
@@ -754,11 +757,12 @@ export default function BankApp() {
           </button>
           <input ref={avatarInputRef} type="file" accept="image/*" hidden onChange={(e) => { handleAvatarFile(e.target.files?.[0]); e.target.value = ""; }} />
         </div>
+        ) : <span className="profile-avatar">{initials(profile.fullName)}</span>}
         <div><strong>{profile.fullName}</strong><small>{profile.email}</small><StatusPill value={profile.role} />
-          <div className="avatar-actions">
-            <button type="button" className="button button-small button-secondary" disabled={photoBusy} onClick={() => avatarInputRef.current?.click()}><Camera size={14} /> {photoBusy ? "Saving…" : avatar ? "Change photo" : "Upload photo"}</button>
-            {avatar && <button type="button" className="button button-small button-secondary avatar-remove" disabled={photoBusy} onClick={removeAvatar}><Trash2 size={14} /> Remove</button>}
-          </div>
+          {canEditPhoto && <div className="avatar-actions">
+              <button type="button" className="button button-small button-secondary" disabled={photoBusy} onClick={() => avatarInputRef.current?.click()}><Camera size={14} /> {photoBusy ? "Saving…" : avatar ? "Change photo" : "Upload photo"}</button>
+              {avatar && <button type="button" className="button button-small button-secondary avatar-remove" disabled={photoBusy} onClick={removeAvatar}><Trash2 size={14} /> Remove</button>}
+            </div>}
         </div>
       </div><div className="profile-info-row"><span>Customer / Staff ID</span><strong>#{profile.userId}</strong></div><div className="profile-info-row"><span>Access role</span><strong>{rolesLabel[profile.role]}</strong></div><div className="profile-info-row"><span>KYC status</span><StatusPill value={profile.kycStatus} /></div></Panel>
       <Panel title="Update contact details" subtitle="The backend validates full name, phone and address lengths"><form className="form-grid" onSubmit={async (e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); const ok = await doAction<Profile>("/api/v1/auth/me", "PUT", { fullName: fd.get("fullName"), phone: fd.get("phone"), address: fd.get("address") }, "Profile updated successfully."); if (ok) { const refreshed = await getProfile(session!.token); setProfile(refreshed); } }}><Field label="Full name"><input name="fullName" required maxLength={100} defaultValue={profile.fullName} /></Field><Field label="Email address"><input value={profile.email} disabled /></Field><Field label="Phone"><input name="phone" maxLength={20} defaultValue={profile.phone || ""} /></Field><div className="form-span"><Field label="Address"><textarea name="address" maxLength={255} rows={3} defaultValue={profile.address || ""} /></Field></div><div className="form-span form-actions"><button className="button button-primary">Save profile</button></div></form></Panel></div>
