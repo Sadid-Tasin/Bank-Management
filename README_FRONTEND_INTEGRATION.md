@@ -98,4 +98,4 @@ This project is an academic banking simulation as described in the backend API d
 
 ## Production deployment
 
-See `DEPLOYMENT_VERCEL_CLOUDFLARE.md` for the GitHub push sequence, Vercel `frontend/` root-directory settings, Cloudflare CNAME configuration for `bank.sabbirhosenjoy.com`, and the required Render CORS allowlist.
+See `DEPLOYMENT_VERCEL_CLOUDFLARE.md` for the GitHub push sequence, Vercel `frontend/` root-directory settings, Cloudflare CNAME configuration for `bank.abusadid.com`, and the required Render CORS allowlist.
