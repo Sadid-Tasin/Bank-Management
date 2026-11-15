@@ -10,5 +10,6 @@ public record ProfileResponse(
         String phone,
         String address,
         UserRole role,
-        KycStatus kycStatus
+        KycStatus kycStatus,
+        String profilePhoto
 ) {}
