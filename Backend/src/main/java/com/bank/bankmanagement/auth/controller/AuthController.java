@@ -2,6 +2,7 @@ package com.bank.bankmanagement.auth.controller;
 
 import com.bank.bankmanagement.auth.dto.AuthResponse;
 import com.bank.bankmanagement.auth.dto.LoginRequest;
+import com.bank.bankmanagement.auth.dto.ProfilePhotoRequest;
 import com.bank.bankmanagement.auth.dto.ProfileResponse;
 import com.bank.bankmanagement.auth.dto.ProfileUpdateRequest;
 import com.bank.bankmanagement.auth.dto.RegisterRequest;
@@ -50,5 +51,18 @@ public class AuthController {
             @Valid @RequestBody ProfileUpdateRequest request
     ) {
         return authService.updateProfile(jwt.getSubject(), request);
+    }
+
+    @PutMapping("/me/photo")
+    public ProfileResponse updateProfilePhoto(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ProfilePhotoRequest request
+    ) {
+        return authService.updateProfilePhoto(jwt.getSubject(), request);
+    }
+
+    @DeleteMapping("/me/photo")
+    public ProfileResponse removeProfilePhoto(@AuthenticationPrincipal Jwt jwt) {
+        return authService.removeProfilePhoto(jwt.getSubject());
     }
 }
