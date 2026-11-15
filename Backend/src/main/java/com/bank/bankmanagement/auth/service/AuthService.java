@@ -2,6 +2,7 @@ package com.bank.bankmanagement.auth.service;
 
 import com.bank.bankmanagement.auth.dto.AuthResponse;
 import com.bank.bankmanagement.auth.dto.LoginRequest;
+import com.bank.bankmanagement.auth.dto.ProfilePhotoRequest;
 import com.bank.bankmanagement.auth.dto.ProfileResponse;
 import com.bank.bankmanagement.auth.dto.ProfileUpdateRequest;
 import com.bank.bankmanagement.auth.dto.RegisterRequest;
@@ -121,6 +122,27 @@ public class AuthService {
         return toProfileResponse(user);
     }
 
+    @Transactional
+    public ProfileResponse updateProfilePhoto(
+            String email,
+            ProfilePhotoRequest request
+    ) {
+        BankUser user = findUser(email);
+        try {
+            user.updateProfilePhoto(request.photo());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
+        return toProfileResponse(user);
+    }
+
+    @Transactional
+    public ProfileResponse removeProfilePhoto(String email) {
+        BankUser user = findUser(email);
+        user.removeProfilePhoto();
+        return toProfileResponse(user);
+    }
+
     private BankUser findUser(String email) {
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -135,7 +157,8 @@ public class AuthService {
                 user.getPhone(),
                 user.getAddress(),
                 user.getRole(),
-                user.getKycStatus()
+                user.getKycStatus(),
+                user.getProfilePhoto()
         );
     }
 
