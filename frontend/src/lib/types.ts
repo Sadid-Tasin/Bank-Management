@@ -21,6 +21,7 @@ export interface Profile {
   address: string | null;
   role: UserRole;
   kycStatus: KycStatus;
+  profilePhoto?: string | null;
 }
 export interface Page<T> {
   content: T[];
