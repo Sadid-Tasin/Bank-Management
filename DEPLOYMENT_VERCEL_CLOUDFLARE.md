@@ -1,6 +1,6 @@
 # Confused Bank — GitHub, Vercel and Cloudflare Deployment
 
-Assumed production hostname: `bank.sabbirhosenjoy.com`.
+Assumed production hostname: `bank.abusadid.com`.
 
 ## Repository layout
 
@@ -35,9 +35,9 @@ Do not add Supabase database credentials to Vercel. The browser app calls the Sp
 
 ## Custom subdomain
 
-1. In the Vercel project, open Settings → Domains and add `bank.sabbirhosenjoy.com`.
+1. In the Vercel project, open Settings → Domains and add `bank.abusadid.com`.
 2. Copy the exact CNAME target Vercel displays for this domain. Do not assume a generic target if Vercel supplies a project-specific target.
-3. In Cloudflare → `sabbirhosenjoy.com` → DNS, create/update:
+3. In Cloudflare → `abusadid.com` → DNS, create/update:
    - Type: `CNAME`
    - Name: `bank`
    - Target: the exact Vercel CNAME target
@@ -51,7 +51,7 @@ Do not add Supabase database credentials to Vercel. The browser app calls the Sp
 In Render → `bank-management-system` → Environment, set `APP_CORS_ALLOWED_ORIGINS` to a comma-separated allowlist with no trailing slashes. Example (replace the Vercel project URL with the real stable `.vercel.app` URL shown by Vercel):
 
 ```text
-http://localhost:3000,https://YOUR-PROJECT.vercel.app,https://bank.sabbirhosenjoy.com
+http://localhost:3000,https://YOUR-PROJECT.vercel.app,https://bank.abusadid.com
 ```
 
 Preserve any other trusted origin already in the value. Save and redeploy/restart the Render backend. Do not use `*`.
@@ -71,7 +71,7 @@ Once the GitHub repository is connected to Vercel, pushes to the configured prod
 
 ## Final checks
 
-- Visit `https://bank.sabbirhosenjoy.com`.
+- Visit `https://bank.abusadid.com`.
 - Sign in with the existing Admin account.
 - Confirm Dashboard and profile load without a browser CORS error.
 - Test one safe, read-only endpoint first (profile, overview, list). Do not test deposit/withdraw/transfer with real balances until the workflow has been deliberately reviewed.
