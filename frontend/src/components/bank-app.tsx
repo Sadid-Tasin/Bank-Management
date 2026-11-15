@@ -9,9 +9,7 @@ import {
   HandCoins, LayoutDashboard, LogOut, Menu, MoreHorizontal, Plus, RefreshCw, Search, Settings,
   ShieldAlert, ShieldCheck, UserRound, Users, Wallet, X, Banknote, LockKeyhole, Sparkles, BadgeCheck,
 } from "lucide-react";
-import {
-  Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from "recharts";
+import ActivityChart, { type ActivityPoint } from "@/components/activity-chart";
 import { apiRequest, clearSession, getProfile, login, registerCustomer, readSession, saveSession, type SessionData, ApiError } from "@/lib/api";
 import type {
   Account, AuditLog, Customer, FraudAlert, KycReview, Loan, LoanRepayment,
@@ -102,7 +100,7 @@ function Brand({ light = false }: { light?: boolean }) {
   return <div className={`brand-lockup ${light ? "brand-lockup-light" : ""}`}>
     <Image
       src="/brand/confused-bank-full-logo.svg"
-      alt="Confused Bank Limited — Smarter Banking, Made Simple"
+      alt="Confused Bank — Smarter Banking, Made Simple"
       width={1265}
       height={345}
       priority
@@ -148,12 +146,12 @@ function LandingScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
         </div>
       </div>
 
-      <div className="hero-visual" aria-label="Illustrative Confused Bank Limited dashboard preview">
+      <div className="hero-visual" aria-label="Illustrative Confused Bank dashboard preview">
         <div className="hero-orbit hero-orbit-a" />
         <div className="hero-orbit hero-orbit-b" />
         <div className="hero-preview-card">
           <div className="preview-topline">
-            <span className="preview-brand"><span className="preview-brand-icon"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></span><strong>Confused Bank Limited</strong></span>
+            <span className="preview-brand"><span className="preview-brand-icon"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></span><strong>Confused Bank</strong></span>
             <span className="preview-live"><i /> Live banking</span>
           </div>
           <div className="preview-dashboard-body">
@@ -189,7 +187,7 @@ function LandingScreen({ onLogin, onRegister }: { onLogin: () => void; onRegiste
       <article><span className="hero-feature-icon"><LockKeyhole size={23} /></span><div><strong>Protected access</strong><small>Tools tailored to your role</small></div></article>
       <article><span className="hero-feature-icon"><Users size={23} /></span><div><strong>Built for everyone</strong><small>Simple, reliable and easy to use</small></div></article>
     </section>
-    <footer className="hero-footer"><span>© {new Date().getFullYear()} Confused Bank Limited</span><span>Smarter banking, made simple <i /> Secure banking workspace</span></footer>
+    <footer className="hero-footer"><span>© {new Date().getFullYear()} Confused Bank</span><span>Smarter banking, made simple <i /> Secure banking workspace</span></footer>
   </main>;
 }
 
@@ -234,7 +232,7 @@ function LoginScreen({ onLogin, initialMode, onBack }: {
       <div className="auth-story">
         <div className="auth-story-kicker"><span /> YOUR MONEY. YOUR MOMENTUM.</div>
         <h1>{mode === "login" ? <>Welcome back to<br /><em>better banking.</em></> : <>Start with a<br /><em>stronger account.</em></>}</h1>
-        <p>{mode === "login" ? "Sign in to your secure workspace and pick up right where you left off." : "Create your customer profile to begin your banking journey with Confused Bank Limited."}</p>
+        <p>{mode === "login" ? "Sign in to your secure workspace and pick up right where you left off." : "Create your customer profile to begin your banking journey with Confused Bank."}</p>
         <div className="auth-benefits"><span><ShieldCheck size={17} /> Secure token-based access</span><span><Activity size={17} /> Clear account activity</span><span><Sparkles size={17} /> A simpler banking experience</span></div>
         <div className="auth-story-note"><span className="auth-note-mark"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></span><span><strong>Banking, made more human.</strong><small>Thoughtful tools for everyday financial tasks.</small></span></div>
       </div>
@@ -252,10 +250,10 @@ function LoginScreen({ onLogin, initialMode, onBack }: {
           <button className="button button-primary login-submit" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in securely" : "Create customer account"}<ArrowRight size={17} /></button>
         </form>
         <div className="login-foot"><ShieldCheck size={15} /> Protected with secure token-based authentication</div>
-        <p className="auth-card-note">{mode === "login" ? "New to Confused Bank Limited? Use Register to create a customer account." : "Already have an account? Choose Sign in above."}</p>
+        <p className="auth-card-note">{mode === "login" ? "New to Confused Bank? Use Register to create a customer account." : "Already have an account? Choose Sign in above."}</p>
       </div>
     </section>
-    <footer className="auth-footer"><span>© {new Date().getFullYear()} Confused Bank Limited</span><span>Secure access <i /> Academic banking simulation</span></footer>
+    <footer className="auth-footer"><span>© {new Date().getFullYear()} Confused Bank</span><span>Secure access <i /> Academic banking simulation</span></footer>
   </main>;
 }
 
@@ -272,6 +270,7 @@ export default function BankApp() {
   const [notice, setNotice] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [activity, setActivity] = useState<ActivityPoint[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [kycItems, setKycItems] = useState<KycReview[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -295,7 +294,7 @@ export default function BankApp() {
   const unreadCount = notifications.filter((item) => !item.read).length;
 
   const signOut = useCallback(() => {
-    clearSession(); setSession(null); setProfile(null); setOverview(null);
+    clearSession(); setSession(null); setProfile(null); setOverview(null); setActivity([]);
     setAuthScreen("hero"); setActiveView("Dashboard"); setNotifications([]); setShowNotifications(false); setShowProfileMenu(false);
   }, []);
 
@@ -356,14 +355,16 @@ export default function BankApp() {
 
   const fetchDashboard = useCallback(async (token: string, currentProfile: Profile) => {
     if (currentProfile.role === "ADMIN") {
-      const [stats, tx, kyc, loanPage, adminNotices] = await Promise.allSettled([
+      const [stats, tx, kyc, loanPage, adminNotices, daily] = await Promise.allSettled([
         apiRequest<Overview>("/api/v1/admin/reports/overview", token),
         apiRequest<Page<Transaction>>("/api/v1/admin/reports/transactions?page=0&size=6", token),
         apiRequest<Page<KycReview>>("/api/v1/employee/kyc/pending?page=0&size=5", token),
         apiRequest<Page<Loan>>("/api/v1/employee/loans/pending?page=0&size=5", token),
         apiRequest<Page<NotificationItem>>("/api/v1/notifications?page=0&size=5", token),
+        apiRequest<ActivityPoint[]>("/api/v1/admin/reports/activity?days=30", token),
       ]);
       if (stats.status === "fulfilled") setOverview(stats.value);
+      if (daily.status === "fulfilled") setActivity(daily.value || []);
       if (tx.status === "fulfilled") setTransactions(tx.value.content || []);
       if (kyc.status === "fulfilled") setKycItems(kyc.value.content || []);
       if (loanPage.status === "fulfilled") setLoans(loanPage.value.content || []);
@@ -532,9 +533,8 @@ export default function BankApp() {
     const pendingCount = isAdmin ? overview?.pendingLoans ?? 0 : loans.filter((loan) => loan.status === "PENDING").length;
     const deposits = overview?.depositsLast30Days ?? 0;
     const withdrawals = overview?.withdrawalsLast30Days ?? 0;
-    const chartData = [{ label: "Last 30 days", deposits, withdrawals }];
     return <>
-      <div className="welcome-row"><div><div className="eyebrow"><span className="live-dot" /> LIVE BANKING WORKSPACE <span className="eyebrow-divider">/</span> {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</div><h1>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {profile.fullName.split(" ")[0]} <span className="wave">✦</span></h1><p className="page-subtitle">Here&apos;s your latest banking activity and operational overview.</p></div><div className="welcome-actions"><button className="button button-secondary" onClick={() => setReloadKey((v) => v + 1)}><RefreshCw size={15} /> Refresh data</button>{role === "ADMIN" && <button className="button button-primary" onClick={() => selectView("Staff management")}><Plus size={16} /> Add staff</button>}</div></div>
+      <div className="welcome-row"><div><div className="eyebrow"><span className="live-dot" /> LIVE BANKING WORKSPACE <span className="eyebrow-divider">/</span> {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</div><h1>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, <span className="name-grad">{profile.fullName.split(" ")[0]}</span> <span className="wave">✦</span></h1><p className="page-subtitle">Here&apos;s your latest banking activity and operational overview.</p></div><div className="welcome-actions"><button className="button button-secondary" onClick={() => setReloadKey((v) => v + 1)}><RefreshCw size={15} /> Refresh data</button>{role === "ADMIN" && <button className="button button-primary" onClick={() => selectView("Staff management")}><Plus size={16} /> Add staff</button>}</div></div>
       <section className="stats-grid" aria-label="Banking metrics">
         {isAdmin ? <>
           <StatCard icon={<Wallet size={18} />} label="Total account balance" value={money(totalBalance)} tone="green" caption="Across active bank accounts" />
@@ -554,8 +554,8 @@ export default function BankApp() {
         </>}
       </section>
       <section className="analytics-grid">
-        <article className="panel chart-panel"><div className="panel-heading"><div><h2>{isAdmin ? "Banking activity · last 30 days" : "Your banking overview"}</h2><p>{isAdmin ? "Actual deposits and withdrawals recorded by the bank" : "Summary based on your account data"}</p></div><span className="live-data-pill"><i /> LIVE API DATA</span></div>
-          {isAdmin ? <><div className="chart-summary"><strong>{money(deposits + withdrawals)}</strong><small>combined transaction volume · last 30 days</small></div><div className="chart-container"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{ top: 16, right: 10, left: 0, bottom: 0 }} barGap={20}><CartesianGrid vertical={false} stroke="#edf0f4" strokeDasharray="4 5" /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#98a2b3", fontSize: 11 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#98a2b3", fontSize: 10 }} tickFormatter={(v: unknown) => `${Number(v) / 1000000}M`} /><Tooltip formatter={(v: unknown) => money(Number(v))} contentStyle={{ border: "1px solid #edf0f4", borderRadius: 10 }} /><Bar dataKey="deposits" name="Deposits" fill="#1b9a70" radius={[6, 6, 0, 0]} maxBarSize={44} /><Bar dataKey="withdrawals" name="Withdrawals" fill="#b8c7f6" radius={[6, 6, 0, 0]} maxBarSize={44} /></BarChart></ResponsiveContainer></div><div className="chart-footnote"><span><i className="legend-deposit" /> Deposits: <strong>{money(deposits)}</strong></span><span><i className="legend-withdraw" /> Withdrawals: <strong>{money(withdrawals)}</strong></span></div></> : <div className="dashboard-summary-list">{role === "CUSTOMER" ? accounts.slice(0, 4).map((account) => <div className="summary-row" key={account.id}><span className="summary-icon"><Wallet size={16} /></span><span><strong>{account.accountType.replaceAll("_", " ")}</strong><small>{account.accountNumber}</small></span><b>{money(account.balance)}</b></div>) : <><div className="summary-row"><span className="summary-icon"><Users size={16} /></span><span><strong>Customer directory</strong><small>Review customer records and KYC details</small></span><button className="inline-link" onClick={() => selectView("Customers")}>Open</button></div><div className="summary-row"><span className="summary-icon"><ShieldCheck size={16} /></span><span><strong>Identity verification</strong><small>Review pending KYC requests</small></span><button className="inline-link" onClick={() => selectView("KYC review")}>Open</button></div><div className="summary-row"><span className="summary-icon"><BriefcaseBusiness size={16} /></span><span><strong>Loan decisions</strong><small>Review pending loan applications</small></span><button className="inline-link" onClick={() => selectView("Loans")}>Open</button></div></>}</div>}
+        <article className="panel chart-panel"><div className="panel-heading"><div><h2>{isAdmin ? "Banking activity" : "Your banking overview"}</h2><p>{isAdmin ? "Actual deposits and withdrawals recorded by the bank" : "Summary based on your account data"}</p></div><span className="live-data-pill"><i /> LIVE API DATA</span></div>
+          {isAdmin ? <ActivityChart data={activity} fallbackDeposits={deposits} fallbackWithdrawals={withdrawals} /> : <div className="dashboard-summary-list">{role === "CUSTOMER" ? accounts.slice(0, 4).map((account) => <div className="summary-row" key={account.id}><span className="summary-icon"><Wallet size={16} /></span><span><strong>{account.accountType.replaceAll("_", " ")}</strong><small>{account.accountNumber}</small></span><b>{money(account.balance)}</b></div>) : <><div className="summary-row"><span className="summary-icon"><Users size={16} /></span><span><strong>Customer directory</strong><small>Review customer records and KYC details</small></span><button className="inline-link" onClick={() => selectView("Customers")}>Open</button></div><div className="summary-row"><span className="summary-icon"><ShieldCheck size={16} /></span><span><strong>Identity verification</strong><small>Review pending KYC requests</small></span><button className="inline-link" onClick={() => selectView("KYC review")}>Open</button></div><div className="summary-row"><span className="summary-icon"><BriefcaseBusiness size={16} /></span><span><strong>Loan decisions</strong><small>Review pending loan applications</small></span><button className="inline-link" onClick={() => selectView("Loans")}>Open</button></div></>}</div>}
         </article>
         <article className="panel activity-panel"><div className="panel-heading"><div><h2>Quick actions</h2><p>Shortcuts for your role</p></div><MoreHorizontal size={18} className="subtle-icon" /></div><div className="quick-action-grid">
           {role === "ADMIN" && <><QuickAction icon={<Users size={17} />} title="Customers" detail="View customer directory" onClick={() => selectView("Customers")} /><QuickAction icon={<UserRound size={17} />} title="Manage staff" detail="Create and manage roles" onClick={() => selectView("Staff management")} /><QuickAction icon={<ShieldAlert size={17} />} title="Fraud alerts" detail="Review open alerts" onClick={() => selectView("Fraud alerts")} /><QuickAction icon={<FileClock size={17} />} title="Audit trail" detail="Review system activity" onClick={() => selectView("Audit logs")} /></>}
@@ -691,8 +691,8 @@ export default function BankApp() {
   return <main className="bank-shell">
     {sidebarOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
     <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
-      <div className="brand-row"><Image src="/brand/confused-bank-emblem.svg" alt="Confused Bank Limited emblem" width={441} height={488} priority className="sidebar-brand-emblem" /><div className="brand-copy"><span className="brand-name">Confused<span> Bank Limited</span></span><span className="brand-caption">BANKING PLATFORM</span></div><button className="sidebar-close icon-button" aria-label="Close menu" onClick={() => setSidebarOpen(false)}><X size={18} /></button></div>
-      <div className="workspace-switcher"><div className="workspace-icon"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></div><div className="workspace-copy"><strong>Confused Bank Limited</strong><span>{rolesLabel[profile.role]}</span></div><ChevronDown size={15} className="muted-icon" /></div>
+      <div className="brand-row"><Image src="/brand/confused-bank-emblem.svg" alt="Confused Bank emblem" width={441} height={488} priority className="sidebar-brand-emblem" /><div className="brand-copy"><span className="brand-name">Confused<span> Bank</span></span><span className="brand-caption">BANKING PLATFORM</span></div><button className="sidebar-close icon-button" aria-label="Close menu" onClick={() => setSidebarOpen(false)}><X size={18} /></button></div>
+      <div className="workspace-switcher"><div className="workspace-icon"><Image src="/brand/confused-bank-emblem.svg" alt="" aria-hidden="true" width={441} height={488} /></div><div className="workspace-copy"><strong>Confused Bank</strong><span>{rolesLabel[profile.role]}</span></div><ChevronDown size={15} className="muted-icon" /></div>
       <div className="nav-section-label">WORKSPACE</div><nav className="main-nav" aria-label="Main navigation">{navItems.map(({ label, icon: Icon }) => <button key={label} className={`nav-link ${activeView === label ? "nav-link-active" : ""}`} onClick={() => selectView(label)}><Icon size={18} strokeWidth={1.9} /><span>{label}</span>{label === "Notifications" && unreadCount > 0 && <span className="nav-count">{unreadCount}</span>}</button>)}</nav>
       <div className="sidebar-bottom"><div className="upgrade-card"><div className="upgrade-icon"><ShieldCheck size={17} /></div><strong>Secure workspace</strong><p>Your session uses temporary browser session storage and bearer-token API access.</p><span className="secure-sidebar-label"><i /> SESSION ACTIVE</span></div><div className="sidebar-user"><div className="avatar avatar-admin">{initials(profile.fullName)}</div><div className="user-copy"><strong>{profile.fullName}</strong><span>{rolesLabel[profile.role]}</span></div></div></div>
     </aside>
@@ -702,7 +702,7 @@ export default function BankApp() {
         {notice && <div className="global-alert global-alert-success"><CheckCircle2 size={16} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notice"><X size={15} /></button></div>}
         {loading && activeView !== "Dashboard" && <LoadingBlock />}
         <div key={activeView} className="view-transition">{content}</div>
-        <footer className="page-footer"><span>© {new Date().getFullYear()} Confused Bank Limited · Banking Management System</span><span><i className="live-dot footer-status" /> Secure API session <span className="footer-divider">·</span> {profile.role}</span></footer>
+        <footer className="page-footer"><span>© {new Date().getFullYear()} Confused Bank · Banking Management System</span><span><i className="live-dot footer-status" /> Secure API session <span className="footer-divider">·</span> {profile.role}</span></footer>
       </div>
     </section>
   </main>;
@@ -724,7 +724,7 @@ function TransactionTable({ rows, admin }: { rows: Transaction[]; admin: boolean
   return <DataTable headers={["REFERENCE", ...(admin ? ["SOURCE", "DESTINATION"] : ["ACCOUNT FLOW"]), "TYPE", "DATE", "AMOUNT"]}>{rows.map((t) => <tr key={t.id}><td><strong className="transaction-id">{t.reference}</strong></td>{admin ? <><td>{t.sourceAccountNumber || "—"}</td><td>{t.destinationAccountNumber || "—"}</td></> : <td>{t.sourceAccountNumber || t.destinationAccountNumber || "—"}</td>}<td><span className={`type-pill type-${t.type.toLowerCase()}`}>{t.type.replaceAll("_", " ")}</span></td><td>{dateTime(t.createdAt)}</td><td className="amount-text">{money(t.amount)}</td></tr>)}</DataTable>;
 }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><section className="modal-card" role="dialog" aria-modal="true" aria-label={title}><div className="modal-heading"><div><strong>{title}</strong><small>Confused Bank Limited · Secure operation</small></div><button className="icon-button" onClick={onClose} aria-label="Close"><X size={18} /></button></div>{children}</section></div>;
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><section className="modal-card" role="dialog" aria-modal="true" aria-label={title}><div className="modal-heading"><div><strong>{title}</strong><small>Confused Bank · Secure operation</small></div><button className="icon-button" onClick={onClose} aria-label="Close"><X size={18} /></button></div>{children}</section></div>;
 }
 function LoanRepaymentAction({ loan, accounts, token, onDone, onError }: { loan: Loan; accounts: Account[]; token: string; onDone: () => void; onError: (message: string) => void }) {
   const [busy, setBusy] = useState(false);
