@@ -1,6 +1,6 @@
 import type { AuthResponse, Profile } from "@/lib/types";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://bank-management-system-m3th.onrender.com").replace(/\/$/, "");
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://bank-management-79sa.onrender.com").replace(/\/$/, "");
 const SESSION_KEY = "confused_bank_session_v1";
 
 export interface SessionData {
