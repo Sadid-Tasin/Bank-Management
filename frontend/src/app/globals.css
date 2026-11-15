@@ -983,61 +983,71 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ==========================================================================
-   Quick actions panel — original white cards + a light, calm finishing touch
+   Quick actions panel — side list rows with soft icons and light animation
    ========================================================================== */
 .activity-panel { display: flex; flex-direction: column; }
 .activity-panel .quick-action-grid {
-  flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 1fr; gap: 12px; margin-top: 18px; align-content: stretch;
+  flex: 1; display: grid; grid-template-columns: 1fr; grid-auto-rows: minmax(66px, 1fr);
+  gap: 6px; margin-top: 14px; align-content: stretch;
 }
-.activity-panel .quick-action:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 .activity-panel .quick-action {
+  --t: #16866d; --tb: #e6f4ed;
   position: relative; overflow: hidden; isolation: isolate;
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-  min-height: 112px; padding: 15px 15px 16px; text-align: left;
-  border: 1px solid #e6eee9; border-radius: 14px;
-  background: linear-gradient(145deg, #ffffff, #fafcfb); box-shadow: none;
-  opacity: 0; animation: qaFade .5s ease forwards;
-  transition: transform .25s ease, border-color .25s, box-shadow .25s, background .25s;
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) 28px; grid-template-areas: "ic t ch" "ic s ch";
+  column-gap: 14px; row-gap: 1px; align-items: center; align-content: center;
+  min-height: 0; padding: 10px 12px 10px 14px; text-align: left;
+  border: 1px solid transparent; border-radius: 16px; box-shadow: none;
+  background: linear-gradient(#edf3ef, #edf3ef) 72px 100% / calc(100% - 90px) 1px no-repeat;
+  opacity: 0; animation: qaIn .5s cubic-bezier(.2, .8, .2, 1) forwards;
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), background-size .3s, border-color .3s, box-shadow .3s;
 }
-.activity-panel .quick-action:nth-child(1) { animation-delay: .05s; }
-.activity-panel .quick-action:nth-child(2) { animation-delay: .11s; }
-.activity-panel .quick-action:nth-child(3) { animation-delay: .17s; }
-.activity-panel .quick-action:nth-child(4) { animation-delay: .23s; }
-@keyframes qaFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.activity-panel .quick-action:nth-child(1) { animation-delay: .06s; }
+.activity-panel .quick-action:nth-child(2) { --t: #4f68c2; --tb: #e9edfa; animation-delay: .13s; }
+.activity-panel .quick-action:nth-child(3) { --t: #c58a2b; --tb: #fbf1de; animation-delay: .20s; }
+.activity-panel .quick-action:nth-child(4) { --t: #7d62c4; --tb: #f0ebfa; animation-delay: .27s; }
+.activity-panel .quick-action:last-child { background-image: none; }
+@keyframes qaIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
 
-/* thin green line that slides in along the bottom edge on hover */
-.activity-panel .quick-action::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 1;
-  background: linear-gradient(90deg, #34b38a, #16866d);
-  transform: scaleX(0); transform-origin: left center; transition: transform .4s cubic-bezier(.2, .8, .2, 1);
+/* soft tint that sweeps in from the left on hover */
+.activity-panel .quick-action::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 16px;
+  background: linear-gradient(90deg, var(--tb) 0%, color-mix(in srgb, var(--tb) 40%, transparent) 65%, transparent 100%);
+  transform: scaleX(0); transform-origin: left center; opacity: 0;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1), opacity .3s;
 }
-.activity-panel .quick-action:hover::after,
-.activity-panel .quick-action:focus-visible::after { transform: scaleX(1); }
+.activity-panel .quick-action:hover::before,
+.activity-panel .quick-action:focus-visible::before { transform: scaleX(1); opacity: 1; }
+.activity-panel .quick-action:hover,
+.activity-panel .quick-action:focus-visible { transform: translateX(3px); background-size: 0 1px; border-color: color-mix(in srgb, var(--t) 14%, transparent); box-shadow: 0 8px 18px -14px color-mix(in srgb, var(--t) 60%, transparent); }
+.activity-panel .quick-action:active { transform: translateX(3px) scale(.99); }
+.activity-panel .quick-action:focus-visible { outline: 2px solid color-mix(in srgb, var(--t) 45%, transparent); outline-offset: -2px; }
 
-/* icon tile */
+/* soft rounded icon tile with a thin ring */
 .activity-panel .quick-action > span:first-child {
-  width: 36px; height: 36px; display: grid; place-items: center; flex: none;
-  border-radius: 11px; color: #18866b; background: #eaf6ef;
-  transition: background .25s, color .25s, transform .3s cubic-bezier(.3, 1.5, .5, 1);
+  grid-area: ic; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px;
+  color: var(--t); background: linear-gradient(145deg, #ffffff, var(--tb));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 18%, transparent), 0 4px 10px -6px color-mix(in srgb, var(--t) 50%, transparent);
+  transition: background .3s, color .3s, transform .4s cubic-bezier(.3, 1.6, .5, 1), box-shadow .3s;
 }
-.activity-panel .quick-action:hover > span:first-child { background: #16866d; color: #fff; transform: scale(1.06); }
+.activity-panel .quick-action:hover > span:first-child {
+  background: var(--t); color: #fff; transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 8px 16px -6px color-mix(in srgb, var(--t) 65%, transparent);
+}
 
 /* text */
-.activity-panel .quick-action strong { display: block; margin-top: 14px; color: #274a3c; font-size: 11px; font-weight: 750; transition: color .25s; }
-.activity-panel .quick-action small { display: block; margin-top: 3px; color: #90a097; font-size: 9px; line-height: 1.5; }
-.activity-panel .quick-action:hover strong { color: #12664f; }
+.activity-panel .quick-action strong { grid-area: t; margin: 0; align-self: end; color: #24463a; font-size: 12px; font-weight: 750; letter-spacing: -.1px; transition: color .25s; }
+.activity-panel .quick-action small { grid-area: s; margin: 0; align-self: start; color: #8a9c92; font-size: 9.5px; line-height: 1.4; }
+.activity-panel .quick-action:hover strong { color: color-mix(in srgb, var(--t) 80%, #12372b); }
 
-/* arrow */
-.activity-panel .quick-action .quick-chevron { position: absolute; top: 15px; right: 14px; color: #9fb3a7; transition: transform .25s ease, color .25s; }
-.activity-panel .quick-action:hover .quick-chevron { transform: translateX(4px); color: #16866d; }
+/* arrow in a light circle, slides on hover */
+.activity-panel .quick-action .quick-chevron {
+  grid-area: ch; position: static; width: 28px; height: 28px; padding: 6px; box-sizing: border-box;
+  border-radius: 50%; color: #9db1a6; background: #f2f7f4;
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), color .25s, background .25s;
+}
+.activity-panel .quick-action:hover .quick-chevron { transform: translateX(4px); color: #fff; background: var(--t); }
 
-/* hover / press / keyboard */
-.activity-panel .quick-action:hover { transform: translateY(-3px); border-color: #bfdccd; background: #fff; box-shadow: 0 10px 22px -14px rgba(23, 59, 46, .35); }
-.activity-panel .quick-action:active { transform: translateY(-1px) scale(.99); }
-.activity-panel .quick-action:focus-visible { outline: 2px solid #7bd8b1; outline-offset: 2px; }
-
-@media (max-width: 380px) {
+@media (max-width: 700px) {
   .activity-panel .quick-action-grid { grid-template-columns: 1fr; }
 }
