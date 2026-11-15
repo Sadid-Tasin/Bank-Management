@@ -981,3 +981,71 @@ button { -webkit-tap-highlight-color: transparent; }
   .ac-total { font-size: 22px; }
   .ac-tip { padding: 10px 11px; }
 }
+
+/* ==========================================================================
+   Quick actions panel — refined design (appended after the dashboard refresh)
+   ========================================================================== */
+.activity-panel { display: flex; flex-direction: column; }
+.activity-panel .quick-action-grid {
+  flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr; gap: 12px; margin-top: 18px; align-content: stretch;
+}
+.activity-panel .quick-action {
+  --qa: #16866d;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+  gap: 0; min-height: 118px; padding: 16px 16px 15px; text-align: left;
+  border: 1px solid #e6eee9; border-radius: 16px;
+  background: linear-gradient(160deg, #ffffff 40%, color-mix(in srgb, var(--qa) 6%, #ffffff));
+  box-shadow: 0 1px 2px rgba(23, 59, 46, .04);
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1), border-color .25s, box-shadow .28s, background .25s;
+}
+.activity-panel .quick-action:nth-child(2) { --qa: #5b74c9; }
+.activity-panel .quick-action:nth-child(3) { --qa: #d19a35; }
+.activity-panel .quick-action:nth-child(4) { --qa: #8a6fd1; }
+
+/* soft colour glow in the corner, grows on hover */
+.activity-panel .quick-action::before {
+  content: ""; position: absolute; z-index: -1; width: 110px; height: 110px; border-radius: 50%;
+  right: -38px; top: -46px; background: var(--qa); opacity: .10;
+  transition: transform .5s ease, opacity .3s;
+}
+.activity-panel .quick-action:hover::before { transform: scale(1.9); opacity: .14; }
+
+/* icon tile */
+.activity-panel .quick-action > span:first-child {
+  width: 38px; height: 38px; display: grid; place-items: center; flex: none;
+  border-radius: 12px; color: var(--qa);
+  background: color-mix(in srgb, var(--qa) 14%, #ffffff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qa) 16%, transparent);
+  transition: background .25s, color .25s, transform .3s cubic-bezier(.3, 1.5, .5, 1), box-shadow .25s;
+}
+.activity-panel .quick-action:hover > span:first-child {
+  background: var(--qa); color: #fff; transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 8px 16px -6px color-mix(in srgb, var(--qa) 70%, transparent);
+}
+
+/* text */
+.activity-panel .quick-action strong { display: block; margin-top: 14px; color: #1f4437; font-size: 12px; font-weight: 750; letter-spacing: -.1px; }
+.activity-panel .quick-action small { display: block; margin-top: 4px; color: #86988e; font-size: 9.5px; line-height: 1.5; }
+
+/* arrow in a small circle */
+.activity-panel .quick-action .quick-chevron {
+  position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; padding: 6px;
+  border-radius: 50%; color: #8fa398; background: #f1f6f3; box-sizing: border-box;
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1), background .25s, color .25s;
+}
+.activity-panel .quick-action:hover .quick-chevron { transform: translateX(3px); background: var(--qa); color: #fff; }
+
+/* hover / press / keyboard */
+.activity-panel .quick-action:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--qa) 40%, #e6eee9);
+  box-shadow: 0 16px 30px -16px color-mix(in srgb, var(--qa) 55%, transparent), 0 2px 6px rgba(23, 59, 46, .05);
+}
+.activity-panel .quick-action:active { transform: translateY(-1px) scale(.985); }
+.activity-panel .quick-action:focus-visible { outline: 3px solid color-mix(in srgb, var(--qa) 45%, transparent); outline-offset: 2px; }
+
+@media (max-width: 380px) {
+  .activity-panel .quick-action-grid { grid-template-columns: 1fr; }
+}
