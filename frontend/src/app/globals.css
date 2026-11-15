@@ -1346,3 +1346,45 @@ button { -webkit-tap-highlight-color: transparent; }
   .auth-live-chart .line { stroke-dashoffset: 0; }
   .auth-live-chart .area, .auth-live-dot { opacity: 1; }
 }
+
+/* ==========================================================================
+   Profile photo (upload / change / remove)
+   ========================================================================== */
+.avatar { overflow: hidden; }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.profile-button .avatar-small { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #bfe3d2; transition: box-shadow .25s; }
+.profile-button:hover .avatar-small { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #34b38a; }
+
+.profile-summary { align-items: center; gap: 16px; }
+.avatar-uploader { position: relative; flex: none; }
+.avatar-uploader-btn {
+  position: relative; display: grid; place-items: center; width: 84px; height: 84px; padding: 0; overflow: hidden;
+  border: 0; border-radius: 50%; color: #168b68; font-size: 24px; font-weight: 800; letter-spacing: .5px;
+  background: linear-gradient(145deg, #f1faf5, #d8f0e4);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #bfe3d2, 0 14px 26px -14px rgba(22, 134, 109, .7);
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s;
+}
+.avatar-uploader-btn:hover { transform: scale(1.04); box-shadow: 0 0 0 3px #fff, 0 0 0 5px #34b38a, 0 16px 28px -14px rgba(22, 134, 109, .8); }
+.avatar-uploader-btn img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: avatarPop .45s cubic-bezier(.2, .8, .2, 1) both; }
+.avatar-uploader-overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-style: normal;
+  background: rgba(16, 70, 55, .52); backdrop-filter: blur(2px); opacity: 0; transition: opacity .25s;
+}
+.avatar-uploader-btn:hover .avatar-uploader-overlay, .avatar-uploader-btn:focus-visible .avatar-uploader-overlay { opacity: 1; }
+.avatar-uploader-btn:focus-visible { outline: 3px solid #7bd8b1; outline-offset: 3px; }
+@keyframes avatarPop { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: scale(1); } }
+
+.avatar-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.avatar-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+.avatar-remove { color: #b9544e; }
+.avatar-remove:hover { background: #fff3f2; border-color: #f2d6d4; }
+
+@media (max-width: 700px) {
+  .avatar-uploader-btn { width: 72px; height: 72px; font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar-uploader-btn, .avatar-uploader-btn img { animation: none; transition: none; }
+}
+
+.avatar-uploader-btn:disabled { cursor: wait; opacity: .75; }
+.avatar-actions .button:disabled { opacity: .65; cursor: wait; }
