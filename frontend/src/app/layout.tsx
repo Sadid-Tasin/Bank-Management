@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Confused Bank | Smarter Banking, Made Simple",
+  title: "Confused Bank Limited | Smarter Banking, Made Simple",
   description: "A clear, secure banking workspace for customers, staff and administrators.",
 };
 

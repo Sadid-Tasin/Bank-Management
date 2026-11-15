@@ -1,11 +1,11 @@
-# Confused Bank — Frontend Integration
+# Confused Bank Limited — Frontend Integration
 
 This release adds the Next.js frontend under `frontend/` and connects it to the existing Spring Boot REST API. The Java backend, Flyway migrations, Supabase schema and database settings are unchanged.
 
 ## Technology
 
 - Next.js App Router + React + TypeScript
-- Tailwind CSS 4 (existing project setup) and the approved Confused Bank light theme
+- Tailwind CSS 4 (existing project setup) and the approved Confused Bank Limited light theme
 - Lucide React icons and Recharts
 - Spring Boot REST API with JWT bearer authentication
 
