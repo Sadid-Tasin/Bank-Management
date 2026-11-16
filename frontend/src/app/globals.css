@@ -2156,3 +2156,73 @@ aside.sidebar .sidebar-user .avatar-admin::after {
   .hero-screen-light, .hero-screen-light *, .hero-screen-light *::before, .hero-screen-light *::after { animation: none !important; }
   .hero-screen-light .hero-copy h1 em::after { transform: rotate(-1.5deg) scaleX(1); }
 }
+
+/* ==========================================================================
+   Float cards v2 — logo ar dhake na, ar ekdom clean dekhte
+   Security card: card er upore-bam e (logo theke dure)
+   Insights card: card er niche-dane
+   ========================================================================== */
+.hero-screen-light .hero-visual { min-height: 590px; }
+.hero-screen-light .hero-float-security { left: 3%; top: 1%; right: auto; bottom: auto; }
+.hero-screen-light .hero-float-activity { right: 1%; bottom: 1%; left: auto; top: auto; }
+
+.hero-screen-light .hero-float-card {
+  z-index: 3; gap: 13px; padding: 12px 18px 12px 12px; border-radius: 20px; border: 0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .97), rgba(244, 252, 248, .94));
+  box-shadow: 0 22px 44px -20px rgba(14, 98, 66, .45), 0 4px 12px rgba(20, 80, 58, .06), inset 0 0 0 1px rgba(255, 255, 255, .9);
+  animation: hpPop .8s cubic-bezier(.2, .9, .3, 1.2) both, hpFloat 6.6s 1.8s ease-in-out infinite;
+}
+.hero-screen-light .hero-float-security { animation-delay: .9s, 1.8s; }
+.hero-screen-light .hero-float-activity { animation-delay: 1.15s, 2.6s; animation-duration: .8s, 7.4s; }
+/* pothom e halka mint dhar */
+.hero-screen-light .hero-float-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(25, 184, 120, .55), rgba(255, 255, 255, 0) 45%, rgba(232, 195, 111, .45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.hero-screen-light .hero-float-card strong { font-size: 13px; font-weight: 750; letter-spacing: -.2px; }
+.hero-screen-light .hero-float-card small { font-size: 11px; margin-top: 3px; }
+
+/* solid gradient icon chip */
+.hero-screen-light .float-icon {
+  width: 46px; height: 46px; border-radius: 15px; color: #fff;
+  background: linear-gradient(145deg, #2fc594, #0b8a64);
+  box-shadow: 0 12px 20px -10px rgba(11, 138, 100, .85), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.hero-screen-light .float-icon-light {
+  color: #fff; background: linear-gradient(145deg, #f2c75e, #d4921a);
+  box-shadow: 0 12px 20px -10px rgba(212, 146, 26, .85), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.hero-screen-light .hero-float-activity .float-icon::after { border-color: rgba(212, 146, 26, .5); }
+/* security card er shield e ekta choto "live" dot */
+.hero-screen-light .hero-float-security .float-icon::before {
+  content: ""; position: absolute; right: -3px; top: -3px; width: 11px; height: 11px; border-radius: 50%;
+  background: #4ee0a6; border: 2px solid #fff; box-shadow: 0 0 8px rgba(78, 224, 166, .8); z-index: 1;
+}
+
+@keyframes hpPop { from { opacity: 0; transform: translateY(14px) scale(.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes hpFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@media (max-width: 900px) {
+  .hero-screen-light .hero-visual { min-height: 500px; }
+  .hero-screen-light .hero-float-security { left: 1%; top: 1%; }
+  .hero-screen-light .hero-float-activity { right: 0; bottom: 1%; }
+  .hero-screen-light .hero-float-card strong { font-size: 11px; }
+  .hero-screen-light .hero-float-card small { font-size: 9px; }
+  .hero-screen-light .float-icon { width: 38px; height: 38px; border-radius: 12px; }
+}
+@media (max-width: 700px) {
+  .hero-screen-light .hero-visual { min-height: 400px; }
+  .hero-screen-light .hero-float-security { left: 0; top: 0; }
+  .hero-screen-light .hero-float-activity { right: 0; bottom: 0; }
+  .hero-screen-light .hero-float-card { padding: 8px 12px 8px 8px; gap: 8px; border-radius: 15px; }
+  .hero-screen-light .hero-float-card strong { font-size: 10px; }
+  .hero-screen-light .hero-float-card small { font-size: 8px; }
+  .hero-screen-light .float-icon { width: 30px; height: 30px; border-radius: 10px; }
+  .hero-screen-light .float-icon svg { width: 16px; height: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-screen-light .hero-float-card { animation: none !important; opacity: 1; }
+}
