@@ -1388,3 +1388,51 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .avatar-uploader-btn:disabled { cursor: wait; opacity: .75; }
 .avatar-actions .button:disabled { opacity: .65; cursor: wait; }
+
+/* ==========================================================================
+   Refresh button — spins on click, shows "Refreshing…" then "Updated"
+   ========================================================================== */
+.refresh-btn {
+  position: relative; display: inline-flex; align-items: center; gap: 9px; overflow: hidden; isolation: isolate;
+  padding: 6px 17px 6px 7px; border: 1px solid #cfe7da; border-radius: 999px; cursor: pointer;
+  color: #14785f; font-size: 13px; font-weight: 750; white-space: nowrap;
+  background: linear-gradient(180deg, #ffffff, #f1faf5);
+  box-shadow: 0 8px 18px -14px rgba(22, 134, 109, .7), inset 0 1px 0 #fff;
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s, border-color .25s, background .3s, color .3s;
+}
+.refresh-btn:hover { transform: translateY(-1px); border-color: #8fd2b4; box-shadow: 0 12px 22px -14px rgba(22, 134, 109, .8), inset 0 1px 0 #fff; }
+.refresh-btn:active { transform: translateY(0) scale(.96); }
+.refresh-btn:focus-visible { outline: 3px solid rgba(52, 179, 138, .35); outline-offset: 2px; }
+
+.refresh-icon {
+  display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; color: #fff;
+  background: linear-gradient(145deg, #34b38a, #16866d); box-shadow: 0 6px 12px -6px rgba(22, 134, 109, .9);
+  transition: background .3s, transform .3s;
+}
+.refresh-icon svg { transition: transform .5s cubic-bezier(.3, 1.3, .4, 1); }
+.refresh-btn:hover .refresh-icon svg { transform: rotate(120deg); }
+
+/* busy: icon spins, soft progress line runs along the bottom */
+.refresh-btn.is-busy { cursor: progress; border-color: #8fd2b4; background: linear-gradient(180deg, #f6fcf9, #e6f6ee); transform: none; }
+.refresh-btn.is-busy .refresh-icon svg { animation: refreshSpin .8s linear infinite; }
+.refresh-btn.is-busy::after {
+  content: ""; position: absolute; z-index: -1; left: 0; bottom: 0; height: 3px; width: 45%;
+  background: linear-gradient(90deg, transparent, #34b38a, transparent); animation: refreshBar 1.1s ease-in-out infinite;
+}
+@keyframes refreshSpin { to { transform: rotate(360deg); } }
+@keyframes refreshBar { from { transform: translateX(-100%); } to { transform: translateX(240%); } }
+
+/* done: green flash + check pop */
+.refresh-btn.is-done { color: #0f6e55; border-color: #7fd0ab; background: linear-gradient(180deg, #eefaf4, #d9f3e5); }
+.refresh-btn.is-done .refresh-icon { animation: refreshPop .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes refreshPop { 0% { transform: scale(.6) rotate(-90deg); } 100% { transform: scale(1) rotate(0); } }
+.refresh-label { min-width: 0; }
+
+/* compact version (status row) */
+.refresh-btn-compact { gap: 7px; padding: 3px 12px 3px 4px; font-size: 11px; margin-left: 10px; vertical-align: middle; box-shadow: none; }
+.refresh-btn-compact .refresh-icon { width: 20px; height: 20px; box-shadow: 0 4px 8px -4px rgba(22, 134, 109, .9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-btn, .refresh-icon svg { transition: none; }
+  .refresh-btn.is-busy::after, .refresh-btn.is-done .refresh-icon { animation: none; }
+}
