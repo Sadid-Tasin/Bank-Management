@@ -89,6 +89,38 @@ function EmptyState({ title = "No records found", detail = "Records will appear 
   return <div className="empty-block"><div className="empty-icon"><FileText size={21} /></div><strong>{title}</strong><span>{detail}</span></div>;
 }
 
+function RefreshButton({ onClick, loading, label = "Refresh", compact = false }: {
+  onClick: () => void; loading: boolean; label?: string; compact?: boolean;
+}) {
+  const [spinning, setSpinning] = useState(false); // spins instantly on click, even if data loads very fast
+  const [done, setDone] = useState(false);
+  const clicked = useRef(false);
+  const spinTimer = useRef<number | undefined>(undefined);
+  const busy = loading || spinning;
+  useEffect(() => () => window.clearTimeout(spinTimer.current), []);
+  useEffect(() => {
+    if (busy || !clicked.current) return;
+    clicked.current = false;
+    setDone(true);
+    const t = window.setTimeout(() => setDone(false), 1700);
+    return () => window.clearTimeout(t);
+  }, [busy]);
+  const handleClick = () => {
+    if (busy) return;
+    clicked.current = true;
+    setDone(false);
+    setSpinning(true);
+    window.clearTimeout(spinTimer.current);
+    spinTimer.current = window.setTimeout(() => setSpinning(false), 900);
+    onClick();
+  };
+  const iconSize = compact ? 13 : 16;
+  return <button type="button" className={`refresh-btn${compact ? " refresh-btn-compact" : ""}${busy ? " is-busy" : ""}${done ? " is-done" : ""}`} onClick={handleClick} aria-busy={busy} aria-live="polite">
+    <span className="refresh-icon">{done ? <Check size={iconSize} strokeWidth={2.6} /> : <RefreshCw size={iconSize} strokeWidth={2.3} />}</span>
+    <span className="refresh-label">{busy ? "Refreshing…" : done ? "Updated" : label}</span>
+  </button>;
+}
+
 function LoadingBlock() {
   return <div className="loading-block"><span className="loader" /> Loading secure banking data…</div>;
 }
@@ -616,7 +648,7 @@ export default function BankApp() {
     const deposits = overview?.depositsLast30Days ?? 0;
     const withdrawals = overview?.withdrawalsLast30Days ?? 0;
     return <>
-      <div className="welcome-row"><div><div className="eyebrow"><span className="live-dot" /> LIVE BANKING WORKSPACE <span className="eyebrow-divider">/</span> {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</div><h1>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, <span className="name-grad">{profile.fullName.split(" ")[0]}</span> <span className="wave">✦</span></h1><p className="page-subtitle">Here&apos;s your latest banking activity and operational overview.</p></div><div className="welcome-actions"><button className="button button-secondary" onClick={() => setReloadKey((v) => v + 1)}><RefreshCw size={15} /> Refresh data</button>{role === "ADMIN" && <button className="button button-primary" onClick={() => selectView("Staff management")}><Plus size={16} /> Add staff</button>}</div></div>
+      <div className="welcome-row"><div><div className="eyebrow"><span className="live-dot" /> LIVE BANKING WORKSPACE <span className="eyebrow-divider">/</span> {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</div><h1>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, <span className="name-grad">{profile.fullName.split(" ")[0]}</span> <span className="wave">✦</span></h1><p className="page-subtitle">Here&apos;s your latest banking activity and operational overview.</p></div><div className="welcome-actions"><RefreshButton label="Refresh data" loading={loading} onClick={() => setReloadKey((v) => v + 1)} />{role === "ADMIN" && <button className="button button-primary" onClick={() => selectView("Staff management")}><Plus size={16} /> Add staff</button>}</div></div>
       <section className="stats-grid" aria-label="Banking metrics">
         {isAdmin ? <>
           <StatCard icon={<Wallet size={18} />} label="Total account balance" value={money(totalBalance)} tone="green" caption="Across active bank accounts" />
@@ -795,7 +827,7 @@ export default function BankApp() {
       <div className="sidebar-bottom"><div className="upgrade-card"><div className="upgrade-icon"><ShieldCheck size={17} /></div><strong>Secure workspace</strong><p>Your session uses temporary browser session storage and bearer-token API access.</p><span className="secure-sidebar-label"><i /> SESSION ACTIVE</span></div><div className="sidebar-user"><div className="avatar avatar-admin">{initials(profile.fullName)}</div><div className="user-copy"><strong>{profile.fullName}</strong><span>{rolesLabel[profile.role]}</span></div></div></div>
     </aside>
     <section className="main-area"><header className="topbar"><div className="topbar-left"><button className="mobile-menu icon-button" aria-label="Open menu" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button><div className="breadcrumb">Workspace <ChevronRight size={14} /> <strong>{activeView}</strong></div></div><div className="topbar-actions"><label className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search this view…" aria-label="Search current view" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button className="icon-button notification-button" aria-label="Notifications" onClick={() => { setShowNotifications((v) => !v); if (activeView !== "Notifications") selectView("Notifications"); }}><Bell size={19} />{unreadCount > 0 && <i />}</button>{showNotifications && <div className="notification-popover"><strong>{unreadCount} unread notifications</strong><p>Open the Notifications section to review updates.</p><button className="inline-link" onClick={() => { setShowNotifications(false); selectView("Notifications"); }}>View notifications</button></div>}</div><div className="topbar-divider" /><div className="profile-menu-wrap" ref={profileMenuRef}><button type="button" className="profile-button" aria-haspopup="menu" aria-expanded={showProfileMenu} onClick={() => setShowProfileMenu((open) => !open)}><div className="avatar avatar-small">{avatar ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={avatar} alt="" /> : initials(profile.fullName)}</div><span><strong>{profile.fullName}</strong><small>{rolesLabel[profile.role]}</small></span><ChevronDown size={15} className={showProfileMenu ? "profile-chevron profile-chevron-open" : "profile-chevron"} /></button>{showProfileMenu && <div className="profile-dropdown" role="menu" aria-label="Account menu"><button type="button" role="menuitem" onClick={() => { setShowProfileMenu(false); selectView("My profile"); }}><UserRound size={16} /><span>Profile</span></button><div className="profile-dropdown-divider" /><button type="button" role="menuitem" className="profile-dropdown-signout" onClick={signOut}><LogOut size={16} /><span>Sign out</span></button></div>}</div></div></header>
-      <div className="content-wrap"><div className="content-status-row"><span><span className="live-dot" /> Connected to banking API</span><button className="refresh-link" onClick={() => setReloadKey((v) => v + 1)}><RefreshCw size={13} /> Refresh</button></div>
+      <div className="content-wrap"><div className="content-status-row"><span><span className="live-dot" /> Connected to banking API</span><RefreshButton compact label="Refresh" loading={loading} onClick={() => setReloadKey((v) => v + 1)} /></div>
         {error && <div className="global-alert global-alert-error"><ShieldAlert size={16} /><span>{error}</span><button onClick={() => setError("")} aria-label="Dismiss error"><X size={15} /></button></div>}
         {notice && <div className="global-alert global-alert-success"><CheckCircle2 size={16} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notice"><X size={15} /></button></div>}
         {loading && activeView !== "Dashboard" && <LoadingBlock />}
