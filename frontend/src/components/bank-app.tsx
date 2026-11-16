@@ -844,8 +844,23 @@ function StatCard({ icon, label, value, tone, caption }: { icon: ReactNode; labe
 function QuickAction({ icon, title, detail, onClick }: { icon: ReactNode; title: string; detail: string; onClick: () => void }) {
   return <button className="quick-action" onClick={onClick}><span>{icon}</span><strong>{title}</strong><small>{detail}</small><ChevronRight size={14} className="quick-chevron" /></button>;
 }
+function moduleIcon(title: string): ReactNode {
+  const t = title.toLowerCase();
+  if (t.includes("customer")) return <Users size={22} />;
+  if (t.includes("kyc")) return <BadgeCheck size={22} />;
+  if (t.includes("counter") || t.includes("banking")) return <Banknote size={22} />;
+  if (t.includes("transaction")) return <ArrowLeftRight size={22} />;
+  if (t.includes("loan")) return <HandCoins size={22} />;
+  if (t.includes("staff")) return <BriefcaseBusiness size={22} />;
+  if (t.includes("fraud")) return <ShieldAlert size={22} />;
+  if (t.includes("audit")) return <FileClock size={22} />;
+  if (t.includes("profile")) return <UserRound size={22} />;
+  if (t.includes("account")) return <CreditCard size={22} />;
+  if (t.includes("notification")) return <Bell size={22} />;
+  return <Sparkles size={22} />;
+}
 function ModuleHeader({ title, subtitle, action }: { title: string; subtitle: string; action?: ReactNode }) {
-  return <div className="module-header"><div><div className="eyebrow"><span className="live-dot" /> BANKING OPERATIONS</div><h1>{title}</h1><p className="page-subtitle">{subtitle}</p></div>{action}</div>;
+  return <div className="module-header"><div className="module-title-wrap"><span className="module-icon" aria-hidden="true">{moduleIcon(title)}</span><div><div className="eyebrow"><span className="live-dot" /> BANKING OPERATIONS</div><h1>{title}</h1><p className="page-subtitle">{subtitle}</p></div></div>{action}</div>;
 }
 function DataTable({ headers, children }: { headers: string[]; children: ReactNode }) {
   return <div className="table-scroll"><table className="transaction-table data-table"><thead><tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{children}</tbody></table></div>;
