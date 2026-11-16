@@ -1613,3 +1613,13 @@ button { -webkit-tap-highlight-color: transparent; }
   .compliance-list > div, .empty-icon, .empty-icon::after, .button-primary::after, .record-count::before, .status-tag::before { animation: none !important; }
   .panel, .data-panel, .button-primary, .button-secondary, .button-danger, .form-field input, .form-field select { transition: none !important; }
 }
+
+/* ==========================================================================
+   Brand: sidebar name with PLC badge
+   ========================================================================== */
+/* sidebar */
+.brand-name { white-space: nowrap; }
+.brand-plc {
+  font-style: normal; font-size: .62em; font-weight: 800; letter-spacing: .2em; vertical-align: .22em; margin-left: 2px;
+  color: #e4c06e; padding: 2px 6px; border: 1px solid rgba(228, 192, 110, .45); border-radius: 6px; background: rgba(228, 192, 110, .10);
+}
