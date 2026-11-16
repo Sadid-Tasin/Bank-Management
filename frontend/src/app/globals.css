@@ -1749,8 +1749,9 @@ aside.sidebar .nav-link {
 }
 aside.sidebar .nav-link svg {
   flex: none; box-sizing: content-box; padding: 8px; border-radius: 11px;
-  color: #8fd8bb; background: rgba(255, 255, 255, .055);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  color: var(--chip, #8fd8bb);
+  background: color-mix(in srgb, var(--chip, #8fd8bb) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip, #8fd8bb) 18%, transparent);
   transition: background .28s, color .28s, transform .4s cubic-bezier(.3, 1.6, .5, 1), box-shadow .28s;
 }
 aside.sidebar .nav-link:hover {
@@ -1758,8 +1759,9 @@ aside.sidebar .nav-link:hover {
   color: #fff; transform: translateX(4px);
 }
 aside.sidebar .nav-link:hover svg {
-  color: #b9f6dc; background: rgba(111, 224, 180, .18);
-  box-shadow: inset 0 0 0 1px rgba(111, 224, 180, .3);
+  color: color-mix(in srgb, var(--chip, #8fd8bb) 55%, #fff);
+  background: color-mix(in srgb, var(--chip, #8fd8bb) 24%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip, #8fd8bb) 45%, transparent), 0 6px 14px -6px color-mix(in srgb, var(--chip, #8fd8bb) 60%, transparent);
   transform: rotate(-8deg) scale(1.08);
 }
 aside.sidebar .nav-link:active { transform: translateX(2px) scale(.98); }
@@ -1875,5 +1877,84 @@ aside.sidebar .user-copy span { color: var(--sb-muted); }
 
 /* ---------- motion kom chaile ---------- */
 @media (prefers-reduced-motion: reduce) {
-  aside.sidebar, aside.sidebar *, aside.sidebar *::after { animation: none !important; transition: none !important; }
+  aside.sidebar, aside.sidebar *, aside.sidebar *::before, aside.sidebar *::after { animation: none !important; transition: none !important; }
+}
+
+/* ==========================================================================
+   Polish layer (extra shundor kora) — upore ja ache oita thikই thake
+   ========================================================================== */
+@property --sb-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* 1) protita menu icon er nijer halka rong */
+aside.sidebar .nav-link:nth-child(1)  { --chip: #7be8bd; }
+aside.sidebar .nav-link:nth-child(2)  { --chip: #7cc4f5; }
+aside.sidebar .nav-link:nth-child(3)  { --chip: #5fe0d0; }
+aside.sidebar .nav-link:nth-child(4)  { --chip: #f0cb78; }
+aside.sidebar .nav-link:nth-child(5)  { --chip: #7be8bd; }
+aside.sidebar .nav-link:nth-child(6)  { --chip: #f2a96b; }
+aside.sidebar .nav-link:nth-child(7)  { --chip: #b79cf5; }
+aside.sidebar .nav-link:nth-child(8)  { --chip: #7cc4f5; }
+aside.sidebar .nav-link:nth-child(9)  { --chip: #f58a97; }
+aside.sidebar .nav-link:nth-child(10) { --chip: #9ad0c4; }
+aside.sidebar .nav-link:nth-child(11) { --chip: #f0cb78; }
+aside.sidebar .nav-link:nth-child(12) { --chip: #7be8bd; }
+
+/* 2) hover e daan dike ekta choto arrow */
+aside.sidebar .nav-link::before {
+  content: ""; position: absolute; right: 16px; top: 50%; width: 6px; height: 6px;
+  border-top: 1.8px solid currentColor; border-right: 1.8px solid currentColor;
+  transform: translate(-6px, -50%) rotate(45deg); opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .3s cubic-bezier(.2, .8, .2, 1);
+}
+aside.sidebar .nav-link:not(.nav-link-active):not(:has(.nav-count)):hover::before {
+  opacity: .7; transform: translate(0, -50%) rotate(45deg);
+}
+
+/* 3) halka dot-grid texture (shob theke upore ektu beshi, niche fade kore) */
+aside.sidebar {
+  background:
+    radial-gradient(rgba(255, 255, 255, .055) 1px, transparent 1.2px) 0 0 / 18px 18px,
+    radial-gradient(340px 320px at var(--sb-x) var(--sb-y), rgba(47, 178, 135, .36), transparent 70%),
+    radial-gradient(300px 280px at var(--sb-x2) var(--sb-y2), rgba(232, 195, 111, .15), transparent 70%),
+    radial-gradient(240px 260px at 100% 40%, rgba(47, 178, 135, .10), transparent 70%),
+    linear-gradient(180deg, #0f2d29 0%, #0b2320 52%, #081a18 100%);
+}
+
+/* 4) secure card e ghure cholā light-border */
+aside.sidebar .upgrade-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--sb-angle), transparent 0 62%, rgba(111, 224, 180, .95) 82%, rgba(232, 195, 111, .9) 92%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: sbSpin 7s linear infinite;
+}
+@keyframes sbSpin { to { --sb-angle: 360deg; } }
+
+/* 5) workspace card e halka gradient dhar */
+aside.sidebar .workspace-switcher { position: relative; }
+aside.sidebar .workspace-switcher::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(111, 224, 180, .5), rgba(255, 255, 255, 0) 40%, rgba(232, 195, 111, .35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: .7; transition: opacity .3s;
+}
+aside.sidebar .workspace-switcher:hover::before { opacity: 1; }
+
+/* 6) brand er niche ekta soft glow line */
+aside.sidebar .brand-row { position: relative; }
+aside.sidebar .brand-row::after {
+  content: ""; position: absolute; left: 6px; right: 6px; bottom: -9px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, rgba(111, 224, 180, .55), rgba(232, 195, 111, .35) 55%, transparent);
+  opacity: .6;
+}
+
+/* 7) user avatar e online dot */
+aside.sidebar .sidebar-user .avatar-admin { position: relative; }
+aside.sidebar .sidebar-user .avatar-admin::after {
+  content: ""; position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%;
+  background: #4ee0a6; border: 2px solid #0b2320; box-shadow: 0 0 8px rgba(78, 224, 166, .8);
+  animation: sbPing 2.4s ease-in-out infinite;
 }
