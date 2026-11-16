@@ -1,4 +1,4 @@
-# Confused Bank Limited — GitHub, Vercel and Cloudflare Deployment
+# Confused Bank PLC — GitHub, Vercel and Cloudflare Deployment
 
 Assumed production hostname: `bank.abusadid.com`.
 
@@ -63,7 +63,7 @@ Stage only the frontend and deployment documentation unless other changes were d
 ```bash
 git add frontend README_FRONTEND_INTEGRATION.md DEPLOYMENT_VERCEL_CLOUDFLARE.md
 git diff --cached --check
-git commit -m "feat: deploy Confused Bank Limited frontend"
+git commit -m "feat: deploy Confused Bank PLC frontend"
 git push origin main
 ```
 

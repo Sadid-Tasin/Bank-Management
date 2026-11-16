@@ -1,6 +1,6 @@
-# Confused Bank Limited — Frontend
+# Confused Bank PLC — Frontend
 
-Next.js App Router frontend for the Confused Bank Limited Spring Boot banking API.
+Next.js App Router frontend for the Confused Bank PLC Spring Boot banking API.
 
 ## Run the frontend locally
 
