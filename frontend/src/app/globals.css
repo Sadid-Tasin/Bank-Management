@@ -2235,3 +2235,78 @@ aside.sidebar .sidebar-user .avatar-admin::after {
 @media (prefers-reduced-motion: reduce) {
   .hero-screen-light .hero-float-card { animation: none !important; opacity: 1; }
 }
+
+/* ==========================================================================
+   PERFORMANCE PASS — smoothness fix (high-refresh / ProMotion feel)
+   Problem: kichu animation protita frame e browser ke abar "paint" ba "layout" korte bolchilo
+   (box-shadow, background-position, @property angle, left, filter: blur, backdrop-filter).
+   Fix: shob animation ke sudhu transform + opacity te anlam (GPU te cole, main thread free thake).
+   Dekhte ekdom ager moto-i lagbe. Eita globals.css er EKDOM SHESH e thakte hobe.
+   ========================================================================== */
+
+/* 1) repaint/layout kora keyframe gulo ke no-op kora (je element e lagano ache shegulo static thakbe) */
+@keyframes sbAurora {}
+@keyframes sbSpin {}
+@keyframes hpSpin {}
+@keyframes sbGlow {}
+@keyframes sbGold {}
+@keyframes sbOrb {}
+@keyframes hpDrift {}
+@keyframes hpBreathe {}
+@keyframes hpShine {}
+@keyframes nameShine {}
+@keyframes authShine {}
+@keyframes authTopLine {}
+@keyframes authGlow {}
+@keyframes authSweep {}   /* ager ta "left" animate korto = layout har frame e */
+
+/* 2) box-shadow "ping" -> shudhu opacity pulse (GPU) */
+@keyframes sbPing   { 50% { opacity: .45; } }
+@keyframes hpPing   { 50% { opacity: .45; } }
+@keyframes authPing2 { 50% { opacity: .45; } }
+
+/* 3) page/view change e filter: blur() animate hoto — boro container e khub bhari. Shudhu fade + slide */
+@keyframes viewEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* 4) backdrop-filter: animate howa / scroll kora element e proti frame e blur recalc hoy = shobcheye bhari.
+      Background gulo already prai opaque, tai dekhte prai kono poriborton hobe na */
+.topbar,
+.hero-preview-card, .hero-float-card,
+.hero-screen-light .hero-preview-card, .hero-screen-light .hero-float-card,
+.login-card.auth-card,
+.auth-story-kicker, .auth-live-strip, .auth-benefits span, .auth-story-note {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.topbar { background: #fffffff7; }
+.hero-screen-light .hero-float-card { background: linear-gradient(145deg, #fff, #f4fcf8); }
+.auth-benefits span { background: rgba(255, 255, 255, .8); }
+.auth-story-kicker { background: rgba(255, 255, 255, .85); }
+
+/* 5) sidebar e jegulo ekhono chole — shob transform/opacity only */
+aside.sidebar { animation: none; }
+aside.sidebar .brand-plc { animation: none; }
+aside.sidebar .upgrade-card::before { animation: none; }
+aside.sidebar .upgrade-card::after { animation: none; }
+aside.sidebar .nav-link-active,
+aside.sidebar .nav-link-active:hover { animation: sbIn .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+
+/* 6) hero te */
+.hero-screen-light .hero-glow-one, .hero-screen-light .hero-glow-two { animation: none; }
+.hero-screen-light .hero-copy h1 em { animation: none; }
+.hero-screen-light .preview-balance { animation: none; }
+.hero-screen-light .hero-preview-card::before { animation: none; }
+
+/* 7) entrance animation sesh hole element normal obosthay fire ashbe (fill-mode: backwards).
+      age "both" thakay shesh transform ta permanently lege thakto -> extra GPU layer + hover transform kaj korto na */
+aside.sidebar .brand-row, aside.sidebar .workspace-switcher, aside.sidebar .nav-section-label,
+aside.sidebar .upgrade-card, aside.sidebar .sidebar-user, aside.sidebar .nav-link { animation-fill-mode: backwards; }
+.hero-screen-light .hero-nav,
+.hero-screen-light .hero-copy > *,
+.hero-screen-light .hero-feature-row,
+.hero-screen-light .preview-chart span { animation-fill-mode: backwards; }
+.hero-screen-light .hero-float-card { animation-fill-mode: backwards, none; }
+
+/* 8) jegulo sotti animate hoy, shegulo age thekei GPU layer e rakho */
+.hero-screen-light .hero-preview-card,
+.hero-screen-light .hero-float-card { will-change: transform; }
+.hero-screen-light .hero-glow { will-change: transform; }
